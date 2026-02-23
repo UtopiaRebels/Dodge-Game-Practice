@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://bq4r7yx2mn1k"]
+
+[ext_resource type="Script" uid="uid://c2gg2dnrp7xmw" path="res://scripts/grid.gd" id="1_grid"]
+
+[node name="Grid" type="Node2D" unique_id=1340221897]
+script = ExtResource("1_grid")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=847719380]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 660.0
+offset_bottom = 530.0
+theme_override_constants/separation = 8
+
+[node name="UI" type="HBoxContainer" parent="VBoxContainer" unique_id=1793725823]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BrushLabel" type="Label" parent="VBoxContainer/UI" unique_id=201188529]
+layout_mode = 2
+text = "Brush: 4"
+
+[node name="Spacer" type="Control" parent="VBoxContainer/UI" unique_id=455625020]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScoreLabel" type="Label" parent="VBoxContainer/UI" unique_id=1802777729]
+layout_mode = 2
+text = "Score: 0"
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer" unique_id=221315885]
+layout_mode = 2
+theme_override_constants/h_separation = 1
+theme_override_constants/v_separation = 1
+columns = 10
