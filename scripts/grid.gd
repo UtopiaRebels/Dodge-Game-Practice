@@ -3,12 +3,12 @@ extends Node2D
 # 地图参数
 const COLS = 10
 const ROWS = 7
-const ARTIFACT_COUNT = 8
-const BRUSH_INITIAL = 6
+const ARTIFACT_COUNT = 10
+const BRUSH_INITIAL = 5
 
 # 各稀有度的分数（完整 / 损坏）
-const SCORE_INTACT  = { 1: 10,  2: 30,  3: 100, 4: 300 }
-const SCORE_DAMAGED = { 1:  5,  2: 15,  3:  50, 4: 150 }
+const SCORE_INTACT  = { 1: 10, 2: 35, 3: 130, 4: 280 }
+const SCORE_DAMAGED = { 1:  5, 2: 10, 3:  45, 4:  70 }
 
 const CellScene = preload("res://scenes/cell.tscn")
 
@@ -78,10 +78,10 @@ func place_artifacts(excluded_idx: int):
 	cells[legendary_idx / COLS][legendary_idx % COLS].is_artifact     = true
 	cells[legendary_idx / COLS][legendary_idx % COLS].artifact_rarity = 4
 
-	# 放置 4 个 common 和 2 个 fine
-	var common_fine = [1, 1, 1, 1, 2, 2]
+	# 放置 5 个 common 和 3 个 fine
+	var common_fine = [1, 1, 1, 1, 1, 2, 2, 2]
 	common_fine.shuffle()
-	for i in 6:
+	for i in len(common_fine):
 		var idx = remaining[i]
 		cells[idx / COLS][idx % COLS].is_artifact     = true
 		cells[idx / COLS][idx % COLS].artifact_rarity = common_fine[i]
@@ -168,11 +168,16 @@ func get_fuzzy_range(exact: int, max_rarity: int) -> Vector2i:
 func _on_cell_requested_dig(cell):
 	if not map_generated:
 		generate_map_avoiding(cell)
+
 	cell.do_dig()
 	if cell.is_artifact:
 		score += SCORE_DAMAGED[cell.artifact_rarity]
 	if cell.is_damaged:
 		reduce_neighbor_fuzz(cell)
+	# 挖到空白格时立即扩散（含数字格边界，像传统扫雷）
+	if not cell.is_artifact:
+		var pos = cell_pos[cell]
+		flood_fill_blank(pos.x, pos.y)
 	update_ui()
 	check_game_over()
 
@@ -187,6 +192,53 @@ func _on_cell_requested_brush(cell):
 		score += SCORE_INTACT[cell.artifact_rarity]
 	update_ui()
 	check_game_over()
+
+# -------------------------------------------------------
+# 空白格自动扩散（BFS flood fill）
+# -------------------------------------------------------
+
+func flood_fill_blank(start_row: int, start_col: int):
+	var start_cell = cells[start_row][start_col]
+	# 只有空白格（min=max=0，非文物）才触发扩散
+	if start_cell.is_artifact or start_cell.number_min != 0 or start_cell.number_max != 0:
+		return
+
+	var visited := {}
+	var queue: Array[Vector2i] = [Vector2i(start_row, start_col)]
+	visited[start_row * COLS + start_col] = true
+
+	while queue.size() > 0:
+		var pos: Vector2i = queue.pop_front()
+		var cell = cells[pos.x][pos.y]
+
+		# 自动揭开此空白格（若尚未揭开）
+		if not cell.is_revealed:
+			cell.is_revealed = true
+			cell.update_visuals()
+
+		# 向 8 方向扩展，只把空白格加入队列
+		for dr in [-1, 0, 1]:
+			for dc in [-1, 0, 1]:
+				if dr == 0 and dc == 0:
+					continue
+				var r = pos.x + dr
+				var c = pos.y + dc
+				if r < 0 or r >= ROWS or c < 0 or c >= COLS:
+					continue
+				var key = r * COLS + c
+				if visited.has(key):
+					continue
+				visited[key] = true
+				var neighbor = cells[r][c]
+				if neighbor.is_artifact or neighbor.is_revealed:
+					continue
+				if neighbor.number_min == 0 and neighbor.number_max == 0:
+					# 空白格：加入队列继续扩散
+					queue.append(Vector2i(r, c))
+				else:
+					# 数字格：直接揭开但不继续扩散
+					neighbor.is_revealed = true
+					neighbor.update_visuals()
 
 # -------------------------------------------------------
 # 损坏文物 → 周围数字变精确
@@ -255,7 +307,26 @@ func end_game():
 	for row in ROWS:
 		for col in COLS:
 			cells[row][col].disabled = true
-	score_label.text = "Final: " + str(score)
+	var rating = get_rating(score)
+	score_label.text = "Final: " + str(score) + "  " + rating
+
+func get_rating(s: int) -> String:
+	# 满分约565（5C+3F+1R+1L全完整），全损坏约170
+	# S≥440：传奇+稀有都完整（约125分区间，上限565）
+	# A≥325：传奇损坏但其余全完整≈355（约114分区间）
+	# B≥240：仅稀有完整≈255，加一两件其他≈260-280（约84分区间）
+	# C≥175：少数低价值文物完整（约64分区间）
+	# D＜175：几乎全部损坏（全损坏≈170→D）
+	if s >= 440:
+		return "S"
+	elif s >= 325:
+		return "A"
+	elif s >= 240:
+		return "B"
+	elif s >= 175:
+		return "C"
+	else:
+		return "D"
 
 # -------------------------------------------------------
 # UI
