@@ -133,11 +133,11 @@ func get_fuzzy_range(exact: int, max_rarity: int) -> Vector2i:
 	var width       := 0
 
 	match max_rarity:
-		1:  # COMMON：40% 模糊，范围差固定为 1
-			fuzz_chance = 0.4
+		1:  # COMMON：30% 模糊，范围差固定为 1
+			fuzz_chance = 0.3
 			width = 1
-		2:  # FINE：55% 模糊，范围差固定为 1
-			fuzz_chance = 0.55
+		2:  # FINE：50% 模糊，范围差固定为 1
+			fuzz_chance = 0.5
 			width = 1
 		3:  # RARE：70% 模糊，范围差 1 或 2 各半
 			fuzz_chance = 0.7
