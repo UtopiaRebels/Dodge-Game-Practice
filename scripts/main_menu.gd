@@ -1,15 +1,17 @@
 extends Control
 
-@onready var play_button   = $CenterContainer/VBoxContainer/PlayButton
-@onready var museum_button = $CenterContainer/VBoxContainer/MuseumButton
-@onready var shop_button   = $CenterContainer/VBoxContainer/ShopButton
-@onready var quit_button   = $CenterContainer/VBoxContainer/QuitButton
+@onready var play_button    = $CenterContainer/VBoxContainer/PlayButton
+@onready var museum_button  = $CenterContainer/VBoxContainer/MuseumButton
+@onready var shop_button    = $CenterContainer/VBoxContainer/ShopButton
+@onready var quit_button    = $CenterContainer/VBoxContainer/QuitButton
+@onready var currency_label = $CenterContainer/VBoxContainer/CurrencyLabel
 
 func _ready():
 	play_button.pressed.connect(_on_play_pressed)
 	museum_button.pressed.connect(_on_museum_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	currency_label.text = "货币：" + str(GameData.currency)
 
 func _on_play_pressed():
 	get_tree().change_scene_to_file("res://scenes/grid.tscn")

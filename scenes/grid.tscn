@@ -13,7 +13,7 @@ anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=847719380]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="UI" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=1793725823]
 layout_mode = 2
@@ -21,7 +21,8 @@ theme_override_constants/separation = 12
 
 [node name="BrushLabel" type="Label" parent="CenterContainer/VBoxContainer/UI" unique_id=201188529]
 layout_mode = 2
-text = "Brush: 4"
+text = "Brush: 5"
+theme_override_font_sizes/font_size = 22
 
 [node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer/UI" unique_id=455625020]
 custom_minimum_size = Vector2(20, 0)
@@ -31,6 +32,23 @@ size_flags_horizontal = 3
 [node name="ScoreLabel" type="Label" parent="CenterContainer/VBoxContainer/UI" unique_id=1802777729]
 layout_mode = 2
 text = "Score: 0"
+theme_override_font_sizes/font_size = 22
+
+[node name="ItemBar" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=200000001]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SpareBrushLabel" type="Label" parent="CenterContainer/VBoxContainer/ItemBar" unique_id=200000002]
+layout_mode = 2
+text = "备用软刷 ×0"
+theme_override_font_sizes/font_size = 20
+
+[node name="SpareBrushUseButton" type="Button" parent="CenterContainer/VBoxContainer/ItemBar" unique_id=200000003]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 36)
+text = "使用"
+theme_override_font_sizes/font_size = 20
+disabled = true
 
 [node name="GridContainer" type="GridContainer" parent="CenterContainer/VBoxContainer" unique_id=221315885]
 layout_mode = 2
@@ -41,17 +59,18 @@ columns = 10
 [node name="ResultPanel" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=100000001]
 layout_mode = 2
 visible = false
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="RatingLabel" type="Label" parent="CenterContainer/VBoxContainer/ResultPanel" unique_id=100000002]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 72
+theme_override_font_sizes/font_size = 88
 
 [node name="StatsLabel" type="Label" parent="CenterContainer/VBoxContainer/ResultPanel" unique_id=100000003]
 layout_mode = 2
 horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
 
 [node name="ButtonRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/ResultPanel" unique_id=100000005]
 layout_mode = 2
@@ -59,11 +78,11 @@ alignment = 1
 theme_override_constants/separation = 16
 
 [node name="RestartButton" type="Button" parent="CenterContainer/VBoxContainer/ResultPanel/ButtonRow" unique_id=100000004]
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(220, 56)
 text = "再来一局"
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 
 [node name="MainMenuButton" type="Button" parent="CenterContainer/VBoxContainer/ResultPanel/ButtonRow" unique_id=100000006]
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(220, 56)
 text = "返回主菜单"
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24

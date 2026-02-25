@@ -12,24 +12,45 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-theme_override_constants/separation = 20
+theme_override_constants/separation = 24
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 text = "商店"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 48
 
 [node name="CurrencyLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 text = "持有货币：0"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 
-[node name="PlaceholderLabel" type="Label" parent="CenterContainer/VBoxContainer"]
-text = "道具将在这里出售"
+[node name="SpareBrushCard" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+theme_override_constants/separation = 10
+
+[node name="ItemNameLabel" type="Label" parent="CenterContainer/VBoxContainer/SpareBrushCard"]
+text = "备用软刷"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
+
+[node name="ItemDescLabel" type="Label" parent="CenterContainer/VBoxContainer/SpareBrushCard"]
+text = "+1 刷子（每局限用 1 次）"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+
+[node name="ItemRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/SpareBrushCard"]
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="OwnedLabel" type="Label" parent="CenterContainer/VBoxContainer/SpareBrushCard/ItemRow"]
+text = "持有：0"
+theme_override_font_sizes/font_size = 22
+
+[node name="BuyButton" type="Button" parent="CenterContainer/VBoxContainer/SpareBrushCard/ItemRow"]
+custom_minimum_size = Vector2(180, 50)
+text = "购买 · 1000"
+theme_override_font_sizes/font_size = 22
 
 [node name="BackButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 48)
+custom_minimum_size = Vector2(240, 56)
 text = "返回主菜单"
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22

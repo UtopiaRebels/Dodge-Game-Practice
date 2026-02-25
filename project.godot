@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 3d/physics_engine="Jolt Physics"
 
+[autoload]
+
+GameData="*res://scripts/game_data.gd"
+
 [rendering]
 
 rendering_device/driver.windows="d3d12"

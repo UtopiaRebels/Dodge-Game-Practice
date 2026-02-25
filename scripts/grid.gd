@@ -16,22 +16,28 @@ var cells: Array = []         # cells[row][col] -> Cell
 var cell_pos: Dictionary = {} # Cell -> Vector2i(row, col)
 var brush_count: int = BRUSH_INITIAL
 var score: int = 0
-var map_generated: bool = false  # 第一次点击前地图尚未生成
+var map_generated: bool = false
 
-@onready var grid_container   = $CenterContainer/VBoxContainer/GridContainer
-@onready var brush_label      = $CenterContainer/VBoxContainer/UI/BrushLabel
-@onready var score_label      = $CenterContainer/VBoxContainer/UI/ScoreLabel
-@onready var result_panel     = $CenterContainer/VBoxContainer/ResultPanel
-@onready var rating_label     = $CenterContainer/VBoxContainer/ResultPanel/RatingLabel
-@onready var stats_label      = $CenterContainer/VBoxContainer/ResultPanel/StatsLabel
-@onready var restart_button   = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/RestartButton
-@onready var main_menu_button = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/MainMenuButton
+# 本局道具使用次数追踪
+var spare_brush_used: int = 0
+
+@onready var grid_container      = $CenterContainer/VBoxContainer/GridContainer
+@onready var brush_label         = $CenterContainer/VBoxContainer/UI/BrushLabel
+@onready var score_label         = $CenterContainer/VBoxContainer/UI/ScoreLabel
+@onready var result_panel        = $CenterContainer/VBoxContainer/ResultPanel
+@onready var rating_label        = $CenterContainer/VBoxContainer/ResultPanel/RatingLabel
+@onready var stats_label         = $CenterContainer/VBoxContainer/ResultPanel/StatsLabel
+@onready var restart_button      = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/RestartButton
+@onready var main_menu_button    = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/MainMenuButton
+@onready var spare_brush_label   = $CenterContainer/VBoxContainer/ItemBar/SpareBrushLabel
+@onready var spare_brush_button  = $CenterContainer/VBoxContainer/ItemBar/SpareBrushUseButton
 
 func _ready():
 	generate_grid()
 	update_ui()
 	restart_button.pressed.connect(_on_restart_pressed)
 	main_menu_button.pressed.connect(_on_main_menu_pressed)
+	spare_brush_button.pressed.connect(_on_use_spare_brush)
 
 # -------------------------------------------------------
 # 地图生成
@@ -59,6 +65,22 @@ func generate_map_avoiding(excluded_cell):
 	calculate_numbers()
 
 func place_artifacts(excluded_idx: int):
+	# 按稀有度分拣 ARTIFACT_DEFS 中的 ID 并随机化
+	var common_ids: Array = []
+	var fine_ids:   Array = []
+	var rare_ids:   Array = []
+	var legend_ids: Array = []
+	for id in GameData.ARTIFACT_DEFS:
+		match GameData.ARTIFACT_DEFS[id]["rarity"]:
+			1: common_ids.append(id)
+			2: fine_ids.append(id)
+			3: rare_ids.append(id)
+			4: legend_ids.append(id)
+	common_ids.shuffle()
+	fine_ids.shuffle()
+	rare_ids.shuffle()
+	legend_ids.shuffle()
+
 	# 排除：四个角落 + 第一次点击的格子
 	var corners = [0, COLS - 1, (ROWS - 1) * COLS, ROWS * COLS - 1]
 
@@ -72,7 +94,7 @@ func place_artifacts(excluded_idx: int):
 	var rare_idx      = non_corner[0]
 	var legendary_idx = non_corner[1]
 
-	# 剩余位置供 common / fine 使用（排除第一次点击的格子）
+	# 剩余位置供 common / fine 使用
 	var remaining: Array = []
 	for p in range(COLS * ROWS):
 		if p != rare_idx and p != legendary_idx and p != excluded_idx:
@@ -80,18 +102,20 @@ func place_artifacts(excluded_idx: int):
 	remaining.shuffle()
 
 	# 放置 rare 和 legendary
-	cells[rare_idx / COLS][rare_idx % COLS].is_artifact     = true
-	cells[rare_idx / COLS][rare_idx % COLS].artifact_rarity = 3
-	cells[legendary_idx / COLS][legendary_idx % COLS].is_artifact     = true
-	cells[legendary_idx / COLS][legendary_idx % COLS].artifact_rarity = 4
+	_place_cell_artifact(rare_idx,      3, rare_ids[0])
+	_place_cell_artifact(legendary_idx, 4, legend_ids[0])
 
 	# 放置 5 个 common 和 3 个 fine
-	var common_fine = [1, 1, 1, 1, 1, 2, 2, 2]
-	common_fine.shuffle()
-	for i in len(common_fine):
-		var idx = remaining[i]
-		cells[idx / COLS][idx % COLS].is_artifact     = true
-		cells[idx / COLS][idx % COLS].artifact_rarity = common_fine[i]
+	for i in 5:
+		_place_cell_artifact(remaining[i],     1, common_ids[i])
+	for i in 3:
+		_place_cell_artifact(remaining[5 + i], 2, fine_ids[i])
+
+func _place_cell_artifact(idx: int, rarity: int, artifact_id: String):
+	var cell = cells[idx / COLS][idx % COLS]
+	cell.is_artifact     = true
+	cell.artifact_rarity = rarity
+	cell.artifact_id     = artifact_id
 
 func calculate_numbers():
 	for row in ROWS:
@@ -315,9 +339,10 @@ func end_game():
 		for col in COLS:
 			cells[row][col].disabled = true
 
-	# 统计完整 / 损坏数量
+	# 统计完整 / 损坏数量，同时收集博物馆数据
 	var intact_count  = 0
 	var damaged_count = 0
+	var artifact_list: Array = []
 	for row in ROWS:
 		for col in COLS:
 			var cell = cells[row][col]
@@ -326,6 +351,15 @@ func end_game():
 					damaged_count += 1
 				else:
 					intact_count += 1
+				artifact_list.append({
+					"id":      cell.artifact_id,
+					"rarity":  cell.artifact_rarity,
+					"damaged": cell.is_damaged,
+				})
+
+	# 写入存档：货币 + 博物馆收藏
+	GameData.add_currency(score)
+	GameData.record_artifacts(artifact_list)
 
 	# 更新顶部分数栏
 	var rating = get_rating(score)
@@ -381,4 +415,22 @@ func get_rating(s: int) -> String:
 
 func update_ui():
 	brush_label.text = "Brush: " + str(brush_count)
-	score_label.text  = "Score: "  + str(score)
+	score_label.text = "Score: " + str(score)
+	update_item_bar()
+
+func update_item_bar():
+	var owned   = GameData.get_item_count("spare_brush")
+	var limit   = GameData.ITEM_DEFS["spare_brush"]["run_limit"]
+	var can_use = owned > 0 and spare_brush_used < limit
+	spare_brush_label.text    = "备用软刷 ×" + str(owned)
+	spare_brush_button.disabled = not can_use
+
+func _on_use_spare_brush():
+	var limit = GameData.ITEM_DEFS["spare_brush"]["run_limit"]
+	if spare_brush_used >= limit:
+		return
+	if not GameData.consume_item("spare_brush"):
+		return
+	spare_brush_used += 1
+	brush_count      += 1
+	update_ui()

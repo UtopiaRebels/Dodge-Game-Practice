@@ -6,6 +6,7 @@ enum ArtifactRarity { NONE = 0, COMMON = 1, FINE = 2, RARE = 3, LEGENDARY = 4 }
 # 格子状态
 var is_artifact: bool = false
 var artifact_rarity: ArtifactRarity = ArtifactRarity.NONE
+var artifact_id: String = ""   # 对应 GameData.ARTIFACT_DEFS 中的键
 var is_revealed: bool = false
 var is_damaged: bool = false
 
