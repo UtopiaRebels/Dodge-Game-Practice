@@ -1,4 +1,4 @@
-extends Node2D
+extends Control
 
 # 地图参数
 const COLS = 10
@@ -18,13 +18,20 @@ var brush_count: int = BRUSH_INITIAL
 var score: int = 0
 var map_generated: bool = false  # 第一次点击前地图尚未生成
 
-@onready var grid_container = $VBoxContainer/GridContainer
-@onready var brush_label    = $VBoxContainer/UI/BrushLabel
-@onready var score_label    = $VBoxContainer/UI/ScoreLabel
+@onready var grid_container   = $CenterContainer/VBoxContainer/GridContainer
+@onready var brush_label      = $CenterContainer/VBoxContainer/UI/BrushLabel
+@onready var score_label      = $CenterContainer/VBoxContainer/UI/ScoreLabel
+@onready var result_panel     = $CenterContainer/VBoxContainer/ResultPanel
+@onready var rating_label     = $CenterContainer/VBoxContainer/ResultPanel/RatingLabel
+@onready var stats_label      = $CenterContainer/VBoxContainer/ResultPanel/StatsLabel
+@onready var restart_button   = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/RestartButton
+@onready var main_menu_button = $CenterContainer/VBoxContainer/ResultPanel/ButtonRow/MainMenuButton
 
 func _ready():
 	generate_grid()
 	update_ui()
+	restart_button.pressed.connect(_on_restart_pressed)
+	main_menu_button.pressed.connect(_on_main_menu_pressed)
 
 # -------------------------------------------------------
 # 地图生成
@@ -296,7 +303,7 @@ func check_game_over():
 	end_game()
 
 func end_game():
-	# 自动翻开剩余非文物格子
+	# 自动翻开剩余格子
 	for row in ROWS:
 		for col in COLS:
 			var cell = cells[row][col]
@@ -307,8 +314,48 @@ func end_game():
 	for row in ROWS:
 		for col in COLS:
 			cells[row][col].disabled = true
+
+	# 统计完整 / 损坏数量
+	var intact_count  = 0
+	var damaged_count = 0
+	for row in ROWS:
+		for col in COLS:
+			var cell = cells[row][col]
+			if cell.is_artifact:
+				if cell.is_damaged:
+					damaged_count += 1
+				else:
+					intact_count += 1
+
+	# 更新顶部分数栏
 	var rating = get_rating(score)
-	score_label.text = "Final: " + str(score) + "  " + rating
+	score_label.text = "Score: " + str(score)
+
+	# 显示评级（大字+配色）
+	rating_label.text = rating
+	var rating_color = {
+		"S": Color(1.0, 0.84, 0.0),   # 金色
+		"A": Color(0.27, 0.53, 1.0),  # 蓝色
+		"B": Color(0.27, 0.73, 0.27), # 绿色
+		"C": Color(1.0, 0.55, 0.27),  # 橙色
+		"D": Color(0.55, 0.55, 0.55), # 灰色
+	}
+	rating_label.add_theme_color_override("font_color", rating_color[rating])
+
+	# 显示统计摘要
+	stats_label.text = (
+		"完整 " + str(intact_count) + " 件　·　"
+		+ "损坏 " + str(damaged_count) + " 件　·　"
+		+ "剩余刷子 " + str(brush_count)
+	)
+
+	result_panel.visible = true
+
+func _on_restart_pressed():
+	get_tree().reload_current_scene()
+
+func _on_main_menu_pressed():
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 func get_rating(s: int) -> String:
 	# 满分约565（5C+3F+1R+1L全完整），全损坏约170
